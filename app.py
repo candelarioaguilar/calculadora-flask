@@ -1,12 +1,12 @@
 import math
+import os
 from flask import Flask, render_template, request
 from google import genai
 
 app = Flask(__name__)
 
-# Configura tu cliente de Gemini con tu API Key
-# (Reemplaza 'PON_AQUI_TU_API_KEY' por tu clave real o guárdala de forma segura)
-client = genai.Client(api_key="PON_AQUI_TU_API_KEY")
+# Configura tu cliente de Gemini leyendo automáticamente la variable de entorno GEMINI_API_KEY
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 
 @app.route("/")
