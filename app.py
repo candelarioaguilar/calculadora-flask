@@ -66,9 +66,9 @@ def calculadora():
       pregunta = request.form.get("pregunta_usuario", "")
       if pregunta:
         try:
-          # Usamos el modelo recomendado para texto
+          # Usamos el modelo actualizado recomendado
           response = client.models.generate_content(
-              model="gemini-2.5-flash",
+              model="gemini-3.8-flash",
               contents=(
                   "Eres un asistente experto en telecomunicaciones y teoría de"
                   f" la información. Responde de forma clara y técnica: {pregunta}"
@@ -86,6 +86,10 @@ def calculadora():
       resultado_shannon=resultado_shannon,
       respuesta_ia=respuesta_ia,
   )
+
+
+if __name__ == "__main__":
+  app.run(debug=True)
 
 
 if __name__ == "__main__":
