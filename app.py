@@ -1,57 +1,92 @@
 import math
 from flask import Flask, render_template, request
+from google import genai
 
 app = Flask(__name__)
 
-@app.route('/')
-def inicio():
-    return "Servidor activo. Visita /capacidad_del_canal para acceder al módulo."
+# Configura tu cliente de Gemini con tu API Key
+# (Reemplaza 'PON_AQUI_TU_API_KEY' por tu clave real o guárdala de forma segura)
+client = genai.Client(api_key="PON_AQUI_TU_API_KEY")
 
-@app.route('/capacidad_del_canal', methods=['GET', 'POST'])
-def capacidad_del_canal():
-    resultado = None
-    error = None
-    valor1 = None
-    valor2 = None
 
-    if request.method == 'POST':
-        # 1. Capturar los datos de los inputs del formulario HTML
-        valor1_raw = request.form.get('valor1')
-        valor2_raw = request.form.get('valor2')
+@app.route("/")
+def index():
+  return "Servidor activo. Visita /calculadora para acceder al módulo profesional y chat."
 
-        # Conservar los valores originales para rellenar el formulario (Jinja2)
-        valor1 = valor1_raw
-        valor2 = valor2_raw
 
-        # 2. Validar que los campos no estén vacíos
-        if not valor1_raw or not valor2_raw or valor1_raw.strip() == "" or valor2_raw.strip() == "":
-            error = "Por favor, completa ambos campos (Ancho de Banda y Relación Señal-Ruido)."
+@app.route("/calculadora", methods=["GET", "POST"])
+def calculadora():
+  resultado_canal = None
+  resultado_shannon = None
+  respuesta_ia = None
+
+  if request.method == "POST":
+    tipo_accion = request.form.get("tipo_accion")
+
+    # 1. Capacidad de Canal
+    if tipo_accion == "canal":
+      try:
+        B = float(request.form.get("ancho_banda", 0))
+        S_N = float(request.form.get("snr", 0))
+        C = B * math.log2(1 + S_N)
+        resultado_canal = f"{C:.4f} bps (bits por segundo)"
+      except ValueError:
+        resultado_canal = "Error en los datos ingresados."
+
+    # 2. Cuantificación No Uniforme (Ley Mu)
+    elif tipo_accion == "shannon":
+      try:
+        M = float(request.form.get("m_val", 255))
+        valores_str = request.form.get("valores_x", "")
+        max_val = float(request.form.get("max_val", 100))
+
+        if valores_str:
+          lista_x = [float(v.strip()) for v in valores_str.split(",")]
+          salida_procesada = []
+          for x in lista_x:
+            norm = x / max_val if max_val != 0 else 0
+            signo = 1 if x >= 0 else -1
+            abs_norm = abs(norm)
+            if (1 + M) > 0 and (1 + M * abs_norm) > 0:
+              px = signo * (math.log(1 + M * abs_norm) / math.log(1 + M))
+            else:
+              px = 0
+            salida_procesada.append(f"X: {x} -> Px(μ): {px:.4f}")
+
+          resultado_shannon = (
+              f"Procesamiento Ley μ completado. Resultados: {salida_procesada}"
+          )
         else:
-            try:
-                # 3. Conversión de string a float
-                ancho_banda = float(valor1_raw)
-                senial_ruido = float(valor2_raw)
+          resultado_shannon = "Ingresa valores válidos para X."
+      except ValueError:
+        resultado_shannon = "Error en el formato de los datos."
 
-                # Validar restricciones físicas (el ancho de banda no puede ser negativo ni cero)
-                if ancho_banda <= 0 or senial_ruido < 0:
-                    error = "El ancho de banda debe ser mayor a 0 y la señal-ruido no puede ser negativa."
-                else:
-                    # 4. Aplicación de la fórmula real de Shannon-Hartley: C = B * log2(1 + SNR)
-                    capacidad = ancho_banda * math.log2(1 + senial_ruido)
+    # 3. Chat con Gemini
+    elif tipo_accion == "chat_ia":
+      pregunta = request.form.get("pregunta_usuario", "")
+      if pregunta:
+        try:
+          # Usamos el modelo recomendado para texto
+          response = client.models.generate_content(
+              model="gemini-2.5-flash",
+              contents=(
+                  "Eres un asistente experto en telecomunicaciones y teoría de"
+                  f" la información. Responde de forma clara y técnica: {pregunta}"
+              ),
+          )
+          respuesta_ia = response.text
+        except Exception as e:
+          respuesta_ia = f"Error al conectar con la IA: {str(e)}"
+      else:
+        respuesta_ia = "Por favor escribe una pregunta para la IA."
 
-                    # Redondear a 2 decimales para una presentación limpia en pantalla
-                    resultado = round(capacidad, 2)
+  return render_template(
+      "calculadora.html",
+      resultado_canal=resultado_canal,
+      resultado_shannon=resultado_shannon,
+      respuesta_ia=respuesta_ia,
+  )
 
-            except ValueError:
-                error = "Los valores ingresados deben ser estrictamente numéricos."
 
-    return render_template(
-        'capacidad_del_canal.html',
-        resultado=resultado,
-        error=error,
-        valor1=valor1,
-        valor2=valor2
-    )
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+if __name__ == "__main__":
+  app.run(debug=True)
