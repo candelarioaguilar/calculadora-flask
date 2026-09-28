@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora y Chat IA de Telecomunicaciones</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #cbd5e1;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 650px;
+        }
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        .result-box {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e0e7ff;
+            border-left: 5px solid var(--primary);
+            border-radius: 6px;
+            font-size: 15px;
+            word-break: break-word;
+        }
+        .chat-box {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f1f5f9;
+            border-left: 5px solid #0ea5e9;
+            border-radius: 6px;
+            font-size: 15px;
+            white-space: pre-line;
+        }
+    </style>
+    <script>
+        function cambiarFormulario() {
+            let tipo = document.getElementById("tipo_accion").value;
+            document.getElementById("sec_canal").style.display = (tipo === "canal") ? "block" : "none";
+            document.getElementById("sec_shannon").style.display = (tipo === "shannon") ? "block" : "none";
+            document.getElementById("sec_chat").style.display = (tipo === "chat_ia") ? "block" : "none";
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Plataforma Inteligente de Telecomunicaciones</h2>
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="tipo_accion">Selecciona una herramienta:</label>
+                <select name="tipo_accion" id="tipo_accion" onchange="cambiarFormulario()" required>
+                    <option value="canal">Capacidad de Canal (Shannon-Hartley)</option>
+                    <option value="shannon">Cuantificación No Uniforme / Ley Mu</option>
+                    <option value="chat_ia">Asistente IA (Gemini)</option>
+                </select>
+            </div>
+
+            <!-- Sección Capacidad de Canal -->
+            <div id="sec_canal" class="form-group">
+                <label for="ancho_banda">Ancho de Banda (B en Hz):</label>
+                <input type="number" step="any" name="ancho_banda" placeholder="Ej: 4000">
+                <label for="snr" style="margin-top: 15px;">Relación Señal/Ruido (S/N):</label>
+                <input type="number" step="any" name="snr" placeholder="Ej: 15">
+            </div>
+
+            <!-- Sección Cuantificación No Uniforme -->
+            <div id="sec_shannon" class="form-group" style="display: none;">
+                <label for="m_val">Valor de M (Compresión Ley μ):</label>
+                <input type="number" step="any" name="m_val" value="255">
+                <label for="max_val" style="margin-top: 15px;">Valor Máximo Absoluto (|x| max):</label>
+                <input type="number" step="any" name="max_val" value="100">
+                <label for="valores_x" style="margin-top: 15px;">Valores de X (separados por comas):</label>
+                <textarea name="valores_x" rows="3" placeholder="Ej: 38.2683, 70.7106, 100"></textarea>
+            </div>
+
+            <!-- Sección Chat IA -->
+            <div id="sec_chat" class="form-group" style="display: none;">
+                <label for="pregunta_usuario">Pregúntale al Asistente de IA sobre tu tarea:</label>
+                <textarea name="pregunta_usuario" rows="3" placeholder="Ej: Explícame cómo funciona la ley mu en cuantificación..."></textarea>
+            </div>
+
+            <button type="submit">Ejecutar / Consultar</button>
+        </form>
+
+        {% if resultado_canal %}
+        <div class="result-box">
+            <strong>Resultado Capacidad de Canal:</strong><br>{{ resultado_canal }}
+        </div>
+        {% endif %}
+
+        {% if resultado_shannon %}
+        <div class="result-box">
+            <strong>Resultado Cuantificación No Uniforme (Ley μ):</strong><br>{{ resultado_shannon }}
+        </div>
+        {% endif %}
+
+        {% if respuesta_ia %}
+        <div class="chat-box">
+            <strong>Respuesta del Asistente Gemini:</strong><br>{{ respuesta_ia }}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
